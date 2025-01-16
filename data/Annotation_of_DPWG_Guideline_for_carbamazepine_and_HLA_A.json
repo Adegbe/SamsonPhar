@@ -1,0 +1,121 @@
+{
+  "citations" : [],
+  "guideline" : {
+    "objCls" : "Guideline Annotation",
+    "id" : "PA166265161",
+    "name" : "Annotation of DPWG Guideline for carbamazepine and HLA-A",
+    "alternateDrugAvailable" : true,
+    "cancerGenome" : false,
+    "crossReferences" : [],
+    "dosingInformation" : false,
+    "hasTestingInfo" : true,
+    "history" : [
+      {
+        "id" : 1451704263,
+        "date" : "2022-03-03T16:33:36.667-08:00",
+        "description" : "Annotation current with May 2021 DPWG Guideline release",
+        "type" : "Note",
+        "version" : 0
+      },
+      {
+        "id" : 1451732902,
+        "date" : "2022-03-28T09:57:50.318-07:00",
+        "description" : "Annotation current with February 2022 DPWG guideline release",
+        "type" : "Note",
+        "version" : 0
+      },
+      {
+        "id" : 1451865360,
+        "date" : "2022-08-22T08:50:41.034-07:00",
+        "description" : "Corrected link to further info",
+        "type" : "Update",
+        "version" : 0
+      },
+      {
+        "id" : 1451884120,
+        "date" : "2022-09-16T09:51:29.469-07:00",
+        "description" : "Fixed link to gene information document and added explanatory note",
+        "type" : "Update",
+        "version" : 0
+      },
+      {
+        "id" : 1452091600,
+        "date" : "2023-05-05T21:41:04.691-07:00",
+        "description" : "Updated allele function assignment",
+        "type" : "Update",
+        "version" : 0
+      },
+      {
+        "id" : 1452146472,
+        "date" : "2023-07-03T13:39:54.560-07:00",
+        "description" : "Annotation current with May 2023 DPWG Guideline release",
+        "type" : "Note",
+        "version" : 0
+      },
+      {
+        "id" : 1452411930,
+        "date" : "2024-03-18T12:45:26.881-07:00",
+        "description" : "Updated links for risk analysis pdf.",
+        "type" : "Update",
+        "version" : 0
+      },
+      {
+        "id" : 1452411932,
+        "date" : "2024-03-18T12:49:59.491-07:00",
+        "description" : "Added testing section and tag",
+        "type" : "Update",
+        "version" : 0
+      },
+      {
+        "id" : 1452413044,
+        "date" : "2024-03-19T08:26:27.016-07:00",
+        "description" : "Added alternative drug tag.",
+        "type" : "Update",
+        "version" : 0
+      }
+    ],
+    "literature" : [],
+    "otherPrescribingGuidance" : false,
+    "pediatric" : false,
+    "recommendation" : true,
+    "relatedAlleles" : [
+      {
+        "objCls" : "Haplotype",
+        "id" : "PA165954030",
+        "symbol" : "HLA-A*31:01",
+        "name" : "*31:01",
+        "version" : 5
+      }
+    ],
+    "relatedChemicals" : [
+      {
+        "objCls" : "Chemical",
+        "id" : "PA448785",
+        "name" : "carbamazepine",
+        "version" : 14
+      }
+    ],
+    "relatedGenes" : [
+      {
+        "objCls" : "Gene",
+        "id" : "PA35055",
+        "symbol" : "HLA-A",
+        "name" : "major histocompatibility complex, class I, A",
+        "version" : 42
+      }
+    ],
+    "source" : "DPWG",
+    "summaryMarkdown" : {
+      "id" : 1451697740,
+      "html" : "<p>Consider an alternative drug to carbamazepine in patients with the HLA-A*3101 allele.</p>\n",
+      "version" : 0
+    },
+    "terms" : [],
+    "textMarkdown" : {
+      "id" : 1451697741,
+      "html" : "<p>Read more about how PharmGKB <a href=\"/page/dpwgMapping\">curates DPWG guidelines</a> using extra information provided by DPWG to enable the interactive genotype tool above.</p>\n<h3 id=\"may-2021-guideline\">May 2021 Guideline</h3>\n<p>The Royal Dutch Pharmacists Association - Pharmacogenetics Working Group (DPWG) has evaluated recommendations for carbamazepine based on the presence of the HLA-A*3101 allele.</p>\n<p><em>Wording in table taken from the <a download=\"DPWG_May_2021.pdf\" href=\"https://api.pharmgkb.org/v1/download/file/attachment/DPWG_May_2021.pdf\">Dutch guidelines May 2021 update</a>.</em></p>\n<table class=\"table\">\n<thead>\n<tr>\n<th>Allele/Genotype/Phenotype</th>\n<th>Drug</th>\n<th>Description</th>\n<th>Recommendation</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>HLA-A*3101</td>\n<td>carbamazepine</td>\n<td>Patients with this genetic variation have an increased risk of experiencing the life-threatening cutaneous adverse events DRESS and Stevens-Johnson syndrome/toxic epidermal necrolysis (SJS/TEN). The risk of carbamazepine-induced DRESS in these patients is 0.89%.</td>\n<td>1. carefully weigh the risk of DRESS and SJS/TEN against the benefits 2. if an alternative is an option, choose an alternative</td>\n</tr>\n</tbody>\n</table>\n<p><a download=\"DPWG_HLA_carbamazepine_6237-6238-6239.pdf\" href=\"https://api.pharmgkb.org/v1/download/file/attachment/DPWG_HLA_carbamazepine_6237-6238-6239.pdf\">Read for more information about this recommendation</a>, <a download=\"HLAs.pdf\" href=\"https://api.pharmgkb.org/v1/download/file/attachment/HLAs.pdf\">Read about gene information from DPWG</a></p>\n<h4 id=\"preemptive-genotyping\">Preemptive genotyping</h4>\n<p>Excerpts from the <a download=\"DPWG_HLA_carbamazepine_6237-6238-6239.pdf\" href=\"https://api.pharmgkb.org/v1/download/file/attachment/DPWG_HLA_carbamazepine_6237-6238-6239.pdf\">DPWG risk analysis document</a> for carbamazepine and HLAs:</p>\n<blockquote class=\"blockquote\">\n<p>The KNMP Pharmacogenetics Working Group considers HLA-B*1502 genotyping of patients of Asian, other than\nJapanese descent, HLA-A*3101 genotyping, and HLA-B*1511 genotyping of patients of Han Chinese, Korean, Thai\nor Japanese descent before starting carbamazepine to be beneficial for drug safety. It is advised to consider genotyping these patients before (or directly after) drug therapy has been initiated to guide drug selection.</p>\n</blockquote>\n<p><a href=\"/page/dpwgPreemptiveGenotyping\">Read more about how DPWG assigns their recommendations for preemptive genotyping.</a></p>\n",
+      "version" : 5
+    },
+    "version" : 11
+  }
+}
