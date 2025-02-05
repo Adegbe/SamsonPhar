@@ -1,13 +1,16 @@
 import vcfpy
 
-def parse_vcf(file_path):
+def parse_vcf(uploaded_file):
     """ Fast VCF parsing: Skips malformed lines efficiently and extracts valid rsIDs. """
     variants = []
     skipped_count = 0  # Track skipped entries
 
     try:
-        with open(file_path, "r") as f:
-            lines = [line.strip() for line in f if not line.startswith("#")]  # Remove headers
+        # Decode file content from bytes to string
+        file_content = uploaded_file.getvalue().decode("utf-8").splitlines()
+
+        # Remove header lines (starting with "#")
+        lines = [line.strip() for line in file_content if not line.startswith("#")]
 
         for line_number, line in enumerate(lines, start=1):
             fields = line.split("\t")
@@ -35,8 +38,8 @@ def parse_vcf(file_path):
         if skipped_count > 0:
             st.warning(f"⚠ Skipped {skipped_count} malformed lines.")
 
-        return variants
+        return pd.DataFrame(variants)  # Convert list to DataFrame
 
     except Exception as e:
         st.error(f"❌ Error parsing VCF file: {e}")
-        return []
+        return pd.DataFrame()
