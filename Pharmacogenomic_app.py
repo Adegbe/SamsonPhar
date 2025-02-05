@@ -59,10 +59,15 @@ def compare_vcf_with_local(vcf_data, clinical_variants, clinical_annotations):
         st.error("❌ No valid variants extracted from the VCF file.")
         return pd.DataFrame(), pd.DataFrame()
 
-    # Standardize rsID formatting (lowercase, stripped spaces)
+    # Convert rsIDs to lowercase and strip extra spaces
     vcf_data["variant"] = vcf_data["variant"].str.lower().str.strip()
     clinical_variants["variant"] = clinical_variants["variant"].str.lower().str.strip()
     clinical_annotations["Variant/Haplotypes"] = clinical_annotations["Variant/Haplotypes"].str.lower().str.strip()
+
+    # Remove potential version numbers (e.g., rs1234.1 → rs1234)
+    vcf_data["variant"] = vcf_data["variant"].str.replace(r"\.\d+$", "", regex=True)
+    clinical_variants["variant"] = clinical_variants["variant"].str.replace(r"\.\d+$", "", regex=True)
+    clinical_annotations["Variant/Haplotypes"] = clinical_annotations["Variant/Haplotypes"].str.replace(r"\.\d+$", "", regex=True)
 
     # Compare extracted variants with local datasets
     variant_matches = clinical_variants[clinical_variants["variant"].isin(vcf_data["variant"])]
@@ -98,6 +103,12 @@ if uploaded_file:
     st.write("📌 Sample rsIDs from VCF file:", vcf_data["variant"].head(10).tolist())
     st.write("📌 Sample rsIDs from clinicalVariants.tsv:", clinical_variants["variant"].head(10).tolist())
     st.write("📌 Sample rsIDs from clinical_annotations.tsv:", clinical_annotations["Variant/Haplotypes"].head(10).tolist())
+
+    # Check how many rsIDs actually match
+    vcf_rsids = set(vcf_data["variant"].tolist())
+    clinical_rsids = set(clinical_variants["variant"].tolist())
+    common_rsids = vcf_rsids.intersection(clinical_rsids)
+    st.write(f"🔍 Total Matching rsIDs in clinicalVariants.tsv: {len(common_rsids)}")
 
     # ------------------- STEP 6: DISPLAY RESULTS ------------------- #
     st.subheader("🧬 Matching Variant Data")
