@@ -34,7 +34,7 @@ def parse_vcf(file):
                 variants.append({
                     "chromosome": fields[0],
                     "position": int(fields[1]),
-                    "rsID": variant_id,  # Ensure consistency with local data column names
+                    "variant": variant_id,  # Standardized to match clinicalVariants.tsv
                     "reference": fields[3],
                     "alternate": fields[4] if len(fields) > 4 else ".",
                 })
@@ -54,8 +54,20 @@ def parse_vcf(file):
 # ------------------- STEP 3: COMPARE VCF WITH LOCAL DATA ------------------- #
 def compare_vcf_with_local(vcf_data, clinical_variants, clinical_annotations):
     """ Compare extracted VCF rsIDs with clinical data. """
-    variant_matches = clinical_variants[clinical_variants['variant'].isin(vcf_data['rsID'])]
-    annotation_matches = clinical_annotations[clinical_annotations['Variant/Haplotypes'].isin(vcf_data['rsID'])]
+
+    if vcf_data.empty:
+        st.error("❌ No valid variants extracted from the VCF file.")
+        return pd.DataFrame(), pd.DataFrame()
+
+    # Standardize rsID formatting (lowercase, stripped spaces)
+    vcf_data["variant"] = vcf_data["variant"].str.lower().str.strip()
+    clinical_variants["variant"] = clinical_variants["variant"].str.lower().str.strip()
+    clinical_annotations["Variant/Haplotypes"] = clinical_annotations["Variant/Haplotypes"].str.lower().str.strip()
+
+    # Compare extracted variants with local datasets
+    variant_matches = clinical_variants[clinical_variants["variant"].isin(vcf_data["variant"])]
+    annotation_matches = clinical_annotations[clinical_annotations["Variant/Haplotypes"].isin(vcf_data["variant"])]
+
     return variant_matches, annotation_matches
 
 # ------------------- STEP 4: STREAMLIT UI ------------------- #
@@ -66,7 +78,7 @@ uploaded_file = st.file_uploader("Upload your VCF file here", type=["vcf"])
 
 if uploaded_file:
     with st.spinner("Processing VCF file..."):
-        # Parse the uploaded VCF file using the improved function
+        # Parse the uploaded VCF file
         vcf_data = parse_vcf(uploaded_file)
 
         if vcf_data.empty:
@@ -81,7 +93,13 @@ if uploaded_file:
     # Compare the VCF file with local data
     variant_matches, annotation_matches = compare_vcf_with_local(vcf_data, clinical_variants, clinical_annotations)
 
-    # ------------------- STEP 5: DISPLAY RESULTS ------------------- #
+    # ------------------- STEP 5: Debugging Output ------------------- #
+    st.subheader("🔎 Debugging: Sample rsIDs from Each Dataset")
+    st.write("📌 Sample rsIDs from VCF file:", vcf_data["variant"].head(10).tolist())
+    st.write("📌 Sample rsIDs from clinicalVariants.tsv:", clinical_variants["variant"].head(10).tolist())
+    st.write("📌 Sample rsIDs from clinical_annotations.tsv:", clinical_annotations["Variant/Haplotypes"].head(10).tolist())
+
+    # ------------------- STEP 6: DISPLAY RESULTS ------------------- #
     st.subheader("🧬 Matching Variant Data")
     if not variant_matches.empty:
         st.write(variant_matches)
