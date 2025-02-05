@@ -1,16 +1,13 @@
 import vcfpy
 
-def parse_vcf(file):
+def parse_vcf(file_path):
     """ Fast VCF parsing: Skips malformed lines efficiently and extracts valid rsIDs. """
     variants = []
     skipped_count = 0  # Track skipped entries
 
     try:
-        # Decode file from bytes to string
-        file_content = file.getvalue().decode("utf-8").splitlines()
-
-        # Remove header lines (starting with "#")
-        lines = [line.strip() for line in file_content if not line.startswith("#")]
+        with open(file_path, "r") as f:
+            lines = [line.strip() for line in f if not line.startswith("#")]  # Remove headers
 
         for line_number, line in enumerate(lines, start=1):
             fields = line.split("\t")
@@ -27,7 +24,7 @@ def parse_vcf(file):
                 variants.append({
                     "chromosome": fields[0],
                     "position": int(fields[1]),
-                    "variant": variant_id,  # Standardized to match clinicalVariants.tsv
+                    "id": variant_id,
                     "reference": fields[3],
                     "alternate": fields[4] if len(fields) > 4 else ".",
                 })
@@ -38,8 +35,8 @@ def parse_vcf(file):
         if skipped_count > 0:
             st.warning(f"⚠ Skipped {skipped_count} malformed lines.")
 
-        return pd.DataFrame(variants)  # Convert list to DataFrame
+        return variants
 
     except Exception as e:
         st.error(f"❌ Error parsing VCF file: {e}")
-        return pd.DataFrame()
+        return []
