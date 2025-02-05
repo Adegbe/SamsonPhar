@@ -1,25 +1,31 @@
 import vcfpy
 
 def parse_vcf(uploaded_file):
-    """ Fast VCF parsing: Skips malformed lines efficiently and extracts valid rsIDs. """
+    """ 
+    Fast VCF parsing: Skips malformed lines efficiently and extracts valid rsIDs.
+    Fixes bytes decoding issue and ensures proper file handling in Streamlit.
+    """
     variants = []
     skipped_count = 0  # Track skipped entries
 
     try:
         # Decode file content from bytes to string
-        file_content = uploaded_file.getvalue().decode("utf-8").splitlines()
+        file_content = uploaded_file.read().decode("utf-8").splitlines()
 
-        # Remove header lines (starting with "#")
-        lines = [line.strip() for line in file_content if not line.startswith("#")]
+        for line_number, line in enumerate(file_content, start=1):
+            line = line.strip()
 
-        for line_number, line in enumerate(lines, start=1):
+            # Ensure it's a valid VCF data line (skip headers)
+            if line.startswith("#") or not line:
+                continue
+
             fields = line.split("\t")
 
-            # Fast filter: Skip lines with fewer than 8 columns
+            # Skip malformed lines with fewer than 8 columns
             if len(fields) < 8:
                 skipped_count += 1
                 continue
-            
+
             # Extract variant data
             try:
                 variant_id = fields[2] if fields[2].startswith("rs") else "Unknown"
