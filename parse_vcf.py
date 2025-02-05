@@ -3,59 +3,57 @@ import streamlit as st
 
 def parse_vcf(uploaded_file):
     """
-    Robust VCF parsing that extracts valid variants and handles malformed lines.
-    Properly handles byte/string decoding and provides clear error messages.
+    Handles VCF parsing with proper byte/string conversion and error handling
     """
     variants = []
     skipped_count = 0
 
     try:
-        # Reset file cursor and read content
+        # Read as bytes first then decode
         uploaded_file.seek(0)
-        file_content = uploaded_file.read().decode("utf-8").splitlines()
+        byte_content = uploaded_file.read()
+        
+        # Validate UTF-8 decoding
+        try:
+            decoded_content = byte_content.decode('utf-8')
+        except UnicodeDecodeError:
+            st.error("File encoding error: Not valid UTF-8")
+            return pd.DataFrame()
 
-        for line_number, line in enumerate(file_content, 1):
+        # Process decoded string lines
+        for line_number, line in enumerate(decoded_content.splitlines(), 1):
             line = line.strip()
             
-            # Skip headers and empty lines
-            if line.startswith("#") or not line:
+            # Skip headers/comments using string check
+            if line.startswith('#'):
                 continue
 
-            # Split line into columns
-            fields = line.split("\t")
-            
-            # Validate minimum required columns
-            if len(fields) < 8:
+            # Split columns and validate
+            parts = line.split('\t')
+            if len(parts) < 8:
                 skipped_count += 1
                 continue
 
-            # Extract variant information
+            # Extract fields with validation
             try:
-                chrom = fields[0]
-                pos = int(fields[1])  # Validate integer position
-                variant_id = fields[2] if fields[2].startswith("rs") else "Unknown"
-                ref = fields[3]
-                alt = fields[4] if len(fields) > 4 else "."
-
-                variants.append({
-                    "chromosome": chrom,
-                    "position": pos,
-                    "id": variant_id,
-                    "reference": ref,
-                    "alternate": alt
-                })
+                variant_info = {
+                    "chromosome": parts[0],
+                    "position": int(parts[1]),
+                    "id": parts[2] if parts[2].startswith("rs") else "Unknown",
+                    "reference": parts[3],
+                    "alternate": parts[4] if len(parts) > 4 else ".",
+                }
+                variants.append(variant_info)
             except (IndexError, ValueError) as e:
                 skipped_count += 1
-                st.debug(f"Skipping line {line_number}: {str(e)}")
+                st.debug(f"Line {line_number} error: {str(e)}")
 
-        if skipped_count:
-            st.warning(f"Skipped {skipped_count} malformed/invalid lines.")
+        # Show quality warnings
+        if skipped_count > 0:
+            st.warning(f"Skipped {skipped_count} malformed/incomplete records")
             
         return pd.DataFrame(variants) if variants else pd.DataFrame()
 
-    except UnicodeDecodeError:
-        st.error("Invalid file encoding. Please ensure the file is UTF-8 encoded.")
-        return pd.DataFrame()
     except Exception as e:
-        st.error(f"Critical parsing error: {str(e)}")
+        st.error(f"Critical parsing failure: {str(e)}")
         return pd.DataFrame()
