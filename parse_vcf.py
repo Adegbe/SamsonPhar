@@ -1,54 +1,45 @@
 import vcfpy
 
-def parse_vcf(file_path):
-    """ Fast VCF parsing: Skips malformed lines efficiently and extracts valid rsIDs. """
+def parse_vcf(file):
+    """ Parse VCF file and extract valid rsIDs. """
     variants = []
-    skipped_count = 0  # Track skipped entries
+    skipped_count = 0
 
     try:
-        with open(file_path, "r") as f:
-            lines = [line.strip() for line in f if not line.startswith("#")]  # Remove headers
+        # Decode file from bytes to string
+        file_content = file.getvalue().decode("utf-8").splitlines()
 
-        for line_number, line in enumerate(lines, start=1):
+        for line_number, line in enumerate(file_content, start=1):
+            line = line.strip()
+            if line.startswith("#"):  # Skip headers
+                continue 
+
             fields = line.split("\t")
 
-            # Fast filter: Skip lines with fewer than 8 columns
+            # Skip malformed lines with fewer than 8 fields
             if len(fields) < 8:
                 skipped_count += 1
                 continue
             
-            # Extract variant data
             try:
                 variant_id = fields[2] if fields[2].startswith("rs") else "Unknown"
 
                 variants.append({
                     "chromosome": fields[0],
                     "position": int(fields[1]),
-                    "id": variant_id,
+                    "variant": variant_id,  # Standardized to match clinicalVariants.tsv
                     "reference": fields[3],
                     "alternate": fields[4] if len(fields) > 4 else ".",
                 })
             except (IndexError, ValueError):
                 skipped_count += 1
-                continue  # Skip bad entries
+                continue
 
         if skipped_count > 0:
             st.warning(f"⚠ Skipped {skipped_count} malformed lines.")
 
-        return variants
+        return pd.DataFrame(variants)  # Convert list to DataFrame
 
     except Exception as e:
         st.error(f"❌ Error parsing VCF file: {e}")
-        return []
-
-def display_variant_ids(variants):
-    """ Display extracted rsIDs before querying ClinVar. """
-    valid_rsids = [v["id"] for v in variants if v["id"].startswith("rs")]
-
-    if not valid_rsids:
-        st.error("❌ No valid rsIDs extracted from the VCF file. Please check the file format.")
-        return False
-
-    st.subheader("✅ Extracted rsIDs for Debugging")
-    st.write(f"Total valid rsIDs: {len(valid_rsids)}")
-    st.write("Sample rsIDs:", valid_rsids[:10])  # Show first 10
+        return pd.DataFrame()
