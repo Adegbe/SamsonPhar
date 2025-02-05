@@ -1,4 +1,4 @@
-import vcf
+import vcfpy
 
 def parse_vcf(file_path):
     """ Fast VCF parsing: Skips malformed lines efficiently and extracts valid rsIDs. """
