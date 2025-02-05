@@ -41,3 +41,14 @@ def parse_vcf(file_path):
         st.error(f"❌ Error parsing VCF file: {e}")
         return []
 
+def display_variant_ids(variants):
+    """ Display extracted rsIDs before querying ClinVar. """
+    valid_rsids = [v["id"] for v in variants if v["id"].startswith("rs")]
+
+    if not valid_rsids:
+        st.error("❌ No valid rsIDs extracted from the VCF file. Please check the file format.")
+        return False
+
+    st.subheader("✅ Extracted rsIDs for Debugging")
+    st.write(f"Total valid rsIDs: {len(valid_rsids)}")
+    st.write("Sample rsIDs:", valid_rsids[:10])  # Show first 10
