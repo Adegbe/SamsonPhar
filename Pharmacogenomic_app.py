@@ -1,96 +1,42 @@
 import pandas as pd
 import streamlit as st
 
-# ------------------- STEP 1: LOAD LOCAL DATA ------------------- #
+# Load the local datasets
 @st.cache_data
 def load_data():
-    """ Load clinical variants and clinical annotations from local datasets. """
     clinical_variants = pd.read_csv('data/clinicalVariants.tsv', sep='\t')
     clinical_annotations = pd.read_csv('data/clinical_annotations.tsv', sep='\t')
     return clinical_variants, clinical_annotations
 
-# ------------------- STEP 2: PARSE VCF FILE ------------------- #
-def parse_vcf(file):
-    """ Parse VCF file and extract valid rsIDs. """
-    variants = []
-    skipped_count = 0
-
-    try:
-        for line_number, line in enumerate(file, start=1):
-            line = line.strip()
-            if line.startswith("#"):  # Skip headers
-                continue 
-
-            fields = line.split("\t")
-
-            # Skip malformed lines with fewer than 8 fields
-            if len(fields) < 8:
-                skipped_count += 1
-                continue
-            
-            try:
-                variant_id = fields[2] if fields[2].startswith("rs") else "Unknown"
-
-                variants.append({
-                    "chromosome": fields[0],
-                    "position": int(fields[1]),
-                    "variant": variant_id,  # Standardized to match clinicalVariants.tsv
-                    "reference": fields[3],
-                    "alternate": fields[4] if len(fields) > 4 else ".",
-                })
-            except (IndexError, ValueError):
-                skipped_count += 1
-                continue
-
-        if skipped_count > 0:
-            st.warning(f"⚠ Skipped {skipped_count} malformed lines.")
-
-        return pd.DataFrame(variants)  # Convert list to DataFrame
-
-    except Exception as e:
-        st.error(f"❌ Error parsing VCF file: {e}")
-        return pd.DataFrame()
-
-# ------------------- STEP 3: COMPARE VCF WITH LOCAL DATA ------------------- #
+# Compare the VCF rsIDs with local data and generate a report
 def compare_vcf_with_local(vcf_data, clinical_variants, clinical_annotations):
-    """ Compare extracted VCF rsIDs with clinical data. """
+    # Extract matching rsIDs from clinicalVariants
+    variant_matches = clinical_variants[clinical_variants['variant'].isin(vcf_data['rsID'])]
 
-    if vcf_data.empty:
-        st.error("❌ No valid variants extracted from the VCF file.")
-        return pd.DataFrame(), pd.DataFrame()
-
-    # Convert rsIDs to lowercase and strip extra spaces
-    vcf_data["variant"] = vcf_data["variant"].str.lower().str.strip()
-    clinical_variants["variant"] = clinical_variants["variant"].str.lower().str.strip()
-    clinical_annotations["Variant/Haplotypes"] = clinical_annotations["Variant/Haplotypes"].str.lower().str.strip()
-
-    # Remove potential version numbers (e.g., rs1234.1 → rs1234)
-    vcf_data["variant"] = vcf_data["variant"].str.replace(r"\.\d+$", "", regex=True)
-    clinical_variants["variant"] = clinical_variants["variant"].str.replace(r"\.\d+$", "", regex=True)
-    clinical_annotations["Variant/Haplotypes"] = clinical_annotations["Variant/Haplotypes"].str.replace(r"\.\d+$", "", regex=True)
-
-    # Compare extracted variants with local datasets
-    variant_matches = clinical_variants[clinical_variants["variant"].isin(vcf_data["variant"])]
-    annotation_matches = clinical_annotations[clinical_annotations["Variant/Haplotypes"].isin(vcf_data["variant"])]
+    # Extract matching rsIDs from clinical_annotations
+    annotation_matches = clinical_annotations[clinical_annotations['Variant/Haplotypes'].isin(vcf_data['rsID'])]
 
     return variant_matches, annotation_matches
 
-# ------------------- STEP 4: STREAMLIT UI ------------------- #
-st.title("🔬 Pharmacogenomics Tool")
+# Streamlit App
+st.title("Pharmacogenomics Tool")
 
 st.subheader("Upload a VCF File")
-uploaded_file = st.file_uploader("Upload your VCF file here", type=["vcf"])
+uploaded_file = st.file_uploader("Upload your VCF file here", type=["vcf", "txt"])
 
 if uploaded_file:
-    with st.spinner("Processing VCF file..."):
-        # Parse the uploaded VCF file
-        vcf_data = parse_vcf(uploaded_file)
-
-        if vcf_data.empty:
-            st.error("No valid variants extracted from the VCF file.")
-            st.stop()
-
-    st.success("✅ VCF file loaded successfully!")
+    # Parse the VCF file
+    try:
+        vcf_data = pd.read_csv(
+            uploaded_file,
+            sep="\t",
+            comment='#',
+            names=['rsID', 'chromosome', 'position', 'genotype']
+        )
+        st.success("VCF file loaded successfully!")
+    except Exception as e:
+        st.error(f"Error loading VCF file: {e}")
+        st.stop()
 
     # Load local data
     clinical_variants, clinical_annotations = load_data()
@@ -98,39 +44,27 @@ if uploaded_file:
     # Compare the VCF file with local data
     variant_matches, annotation_matches = compare_vcf_with_local(vcf_data, clinical_variants, clinical_annotations)
 
-    # ------------------- STEP 5: Debugging Output ------------------- #
-    st.subheader("🔎 Debugging: Sample rsIDs from Each Dataset")
-    st.write("📌 Sample rsIDs from VCF file:", vcf_data["variant"].head(10).tolist())
-    st.write("📌 Sample rsIDs from clinicalVariants.tsv:", clinical_variants["variant"].head(10).tolist())
-    st.write("📌 Sample rsIDs from clinical_annotations.tsv:", clinical_annotations["Variant/Haplotypes"].head(10).tolist())
-
-    # Check how many rsIDs actually match
-    vcf_rsids = set(vcf_data["variant"].tolist())
-    clinical_rsids = set(clinical_variants["variant"].tolist())
-    common_rsids = vcf_rsids.intersection(clinical_rsids)
-    st.write(f"🔍 Total Matching rsIDs in clinicalVariants.tsv: {len(common_rsids)}")
-
-    # ------------------- STEP 6: DISPLAY RESULTS ------------------- #
-    st.subheader("🧬 Matching Variant Data")
+    # Display results
+    st.subheader("Matching Variant Data")
     if not variant_matches.empty:
         st.write(variant_matches)
         st.download_button(
-            label="📥 Download Variant Matches as CSV",
+            label="Download Variant Matches as CSV",
             data=variant_matches.to_csv(index=False),
             file_name="variant_matches.csv",
             mime="text/csv",
         )
     else:
-        st.warning("⚠ No matching variants found in clinicalVariants.")
+        st.warning("No matching variants found in clinicalVariants.")
 
-    st.subheader("📑 Matching Clinical Annotations")
+    st.subheader("Matching Clinical Annotations")
     if not annotation_matches.empty:
         st.write(annotation_matches)
         st.download_button(
-            label="📥 Download Annotation Matches as CSV",
+            label="Download Annotation Matches as CSV",
             data=annotation_matches.to_csv(index=False),
             file_name="annotation_matches.csv",
             mime="text/csv",
         )
     else:
-        st.warning("⚠ No matching annotations found in clinical_annotations.")
+        st.warning("No matching annotations found in clinical_annotations.")
